@@ -1,4 +1,3 @@
-My App
-======
+# Wrike App
 
-todo: add a description that will appear alongside your app in Deskpro admin
+Elevate your project and task management to new heights with Wrike

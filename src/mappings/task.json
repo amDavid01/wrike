@@ -1,0 +1,129 @@
+{
+  "titleKeyName": "title",
+  "idKey": "id",
+  "externalUrl": "__permalink__",
+  "create": [
+    {
+      "name": "title",
+      "label": "Title",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "description",
+      "label": "Description",
+      "type": "textarea",
+      "required": true
+    },
+    {
+      "name": "status",
+      "label": "Status",
+      "type": "dropdown"
+    },
+    {
+      "name": "importance",
+      "label": "Importance",
+      "type": "dropdown"
+    },
+    {
+      "name": "responsibles",
+      "label": "Assignees",
+      "type": "dropdown",
+      "multiple": true
+    },
+    {
+      "name": "start_date",
+      "label": "Start Date",
+      "type": "date"
+    },
+    {
+      "name": "due_date",
+      "label": "Due Date",
+      "type": "date"
+    }
+  ],
+  "view": [
+    [
+      {
+        "name": "description",
+        "label": "Description",
+        "type": "description"
+      }
+    ],
+    [
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "text"
+      }
+    ],
+    [
+      {
+        "name": "importance",
+        "label": "Importance",
+        "type": "text"
+      }
+    ],
+    [
+      {
+        "name": "scope",
+        "label": "Scope",
+        "type": "text"
+      }
+    ],
+    [
+      {
+        "name": "start",
+        "label": "Start Date",
+        "type": "date"
+      }
+    ],
+    [
+      {
+        "name": "due",
+        "label": "Due Date",
+        "type": "date"
+      }
+    ],
+    [
+      {
+        "name": "customFields",
+        "label": "",
+        "type": "customFields"
+      }
+    ],
+    [
+      {
+        "name": "linked_tickets",
+        "label": "Linked Tickets",
+        "type": "text"
+      }
+    ]
+  ],
+  "link": [
+    [
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "text"
+      },
+      {
+        "name": "importance",
+        "label": "Importance",
+        "type": "text"
+      }
+    ],
+    [
+      {
+        "name": "due",
+        "label": "Due Date",
+        "type": "date"
+      },
+      {
+        "name": "linked_tickets",
+        "label": "Linked Tickets",
+        "type": "text"
+      }
+    ]
+  ]
+}

@@ -1,26 +1,44 @@
 {
-  "name": "@deskpro-apps/my-app",
-  "title": "My App",
-  "description": "My Deskpro app",
-  "version": "0.0.5",
+  "name": "@deskpro-apps/wrike",
+  "title": "Wrike",
+  "description": "Wrike integration for Deskpro",
+  "version": "0.0.0",
   "scope": "agent",
   "isSingleInstall": false,
   "hasDevMode": true,
-  "targets": [{ "target": "ticket_sidebar", "entrypoint": "index.html" }],
+  "targets": [
+    {
+      "target": "ticket_sidebar",
+      "entrypoint": "index.html"
+    }
+  ],
   "settings": {
-    "example": {
-      "title": "Example Setting",
+    "access_token": {
+      "title": "Access Token",
       "description": "Example backend only setting",
       "type": "string",
       "isRequired": false,
       "isBackendOnly": true
     }
   },
+  "entityAssociations": {
+    "linkedTasks": {
+      "entity": "ticket",
+      "type": "external_id",
+      "title": "Linked Wrike Tasks"
+    }
+  },
   "proxy": {
     "whitelist": [
       {
-        "url": "https://jsonplaceholder.typicode.com/.*",
-        "methods": ["GET"],
+        "url": ".*",
+        "methods": [
+          "GET",
+          "POST",
+          "DELETE",
+          "PUT",
+          "PATCH"
+        ],
         "timeout": 20
       }
     ]

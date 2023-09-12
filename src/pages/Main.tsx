@@ -1,76 +1,112 @@
-import { useState } from "react";
-import { H1, Stack } from "@deskpro/deskpro-ui";
 import {
-  Context,
-  Property,
-  proxyFetch,
   LoadingSpinner,
-  HorizontalDivider,
   useDeskproAppEvents,
+  useDeskproLatestAppContext,
   useInitialisedDeskproAppClient,
+  useQueryWithClient,
 } from "@deskpro/app-sdk";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLinkTasks, useTicketCount } from "../hooks/hooks";
+import { FieldMapping } from "../components/FieldMapping/FieldMapping";
+import TaskJson from "../mappings/task.json";
+import { Stack } from "@deskpro/deskpro-ui";
+import { getTasksByIds } from "../api/api";
 
-/*
-    Note: the following page component contains example code, please remove the contents of this component before you
-    develop your app. For more information, please refer to our apps
-    guides @see https://support.deskpro.com/en-US/guides/developers/anatomy-of-an-app
-*/
 export const Main = () => {
-  const [ticketContext, setTicketContext] = useState<Context | null>(null);
+  const { context } = useDeskproLatestAppContext();
+  const navigate = useNavigate();
+  const [tasksIds, setTaskIds] = useState<string[]>([]);
+  const [taskLinketCount, setTaskLinkedCount] = useState<
+    Record<string, number>
+  >({});
+  const { getLinkedTasks } = useLinkTasks();
+  const { getMultipleTasksTicketCount } = useTicketCount();
 
-  const [examplePosts, setExamplePosts] = useState<
-    { id: string; title: string }[]
-  >([]);
-
-  // Add a "refresh" button @see https://support.deskpro.com/en-US/guides/developers/app-elements
   useInitialisedDeskproAppClient((client) => {
-    client.registerElement("myRefreshButton", { type: "refresh_button" });
-  });
+    client.setTitle("Wrike");
 
-  // Listen for the "change" event and store the context data
-  // as local state @see https://support.deskpro.com/en-US/guides/developers/app-events
-  useDeskproAppEvents({
-    onChange: setTicketContext,
-  });
+    client.deregisterElement("homeButton");
 
-  // Use the apps proxy to fetch data from a third party
-  // API @see https://support.deskpro.com/en-US/guides/developers/app-proxy
-  useInitialisedDeskproAppClient((client) =>
-    (async () => {
-      const fetch = await proxyFetch(client);
+    client.deregisterElement("menuButton");
 
-      const response = await fetch(
-        "https://jsonplaceholder.typicode.com/posts"
-      );
+    client.registerElement("plusButton", {
+      type: "plus_button",
+    });
 
-      const posts = await response.json();
+    client.deregisterElement("editButton");
 
-      setExamplePosts(posts.slice(0, 3));
-    })()
+    client.registerElement("refreshButton", {
+      type: "refresh_button",
+    });
+  }, []);
+
+  useInitialisedDeskproAppClient(
+    (client) => {
+      client.setBadgeCount(tasksIds.length);
+    },
+    [tasksIds]
   );
 
-  // If we don't have a ticket context yet, show a loading spinner
-  if (ticketContext === null) {
-    return <LoadingSpinner />;
-  }
+  useDeskproAppEvents({
+    async onElementEvent(id) {
+      switch (id) {
+        case "plusButton":
+          navigate("/findOrCreate");
+          break;
+      }
+    },
+  });
+  const tasksByIdsQuery = useQueryWithClient(
+    ["getTasksById"],
+    (client) => getTasksByIds(client, tasksIds),
+    {
+      enabled: !!tasksIds.length,
+    }
+  );
 
-  // Show some information about a given
-  // ticket @see https://support.deskpro.com/en-US/guides/developers/targets and third party API
+  useEffect(() => {
+    if (!tasksByIdsQuery.error) return;
+  }, [tasksByIdsQuery.error]);
+
+  useInitialisedDeskproAppClient(() => {
+    (async () => {
+      if (!context) return;
+
+      const linkedTasks = await getLinkedTasks();
+
+      if (!linkedTasks || linkedTasks.length === 0) {
+        navigate("/findOrCreate");
+
+        return;
+      }
+
+      setTaskIds(linkedTasks as string[]);
+
+      const tasksLinkedCount = await getMultipleTasksTicketCount(linkedTasks);
+
+      setTaskLinkedCount(tasksLinkedCount);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context]);
+
+  if (!tasksByIdsQuery.isSuccess || !taskLinketCount) return <LoadingSpinner />;
+
+  const tasks = tasksByIdsQuery.data.data;
+
   return (
-    <>
-      <H1>Ticket Data</H1>
-      <Stack gap={12} vertical>
-        <Property label="Ticket ID" text={ticketContext.data.ticket.id} />
-        <Property label="Ticket Subject" text={ticketContext.data.ticket.subject}/>
-      </Stack>
-      <HorizontalDivider width={2} />
-      <H1>Example Posts</H1>
-      {examplePosts.map((post) => (
-        <div key={post.id}>
-          <Property label="Post Title" text={post.title} />
-          <HorizontalDivider width={2} />
-        </div>
-      ))}
-    </>
+    <Stack vertical style={{ width: "100%" }}>
+      <FieldMapping
+        fields={tasks.map((e) => ({
+          ...e,
+          linked_tickets: taskLinketCount[e.id] || 0,
+        }))}
+        metadata={TaskJson.link}
+        idKey={TaskJson.idKey}
+        internalChildUrl={`/view/task/`}
+        externalChildUrl={TaskJson.externalUrl}
+        childTitleAccessor={(e) => e.title}
+      />
+    </Stack>
   );
 };
